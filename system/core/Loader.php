@@ -71,6 +71,11 @@ class CI_Loader {
 	public $EmployeeModel;
 	public $session;
 	public $UserModel;
+	public $upload;
+	public $MainModel;
+	public $dest_image;
+	public $image_lib;
+
 	
 	// All these are set automatically. Don't mess with them.
 	/**

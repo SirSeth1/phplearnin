@@ -165,6 +165,7 @@ class CI_Image_lib {
 	 * @var string
 	 */
 	public $wm_text			= '';
+	public $dest_image		= '';
 
 	/**
 	 * Type of watermarking.  Options:  text/overlay

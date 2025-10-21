@@ -72,3 +72,21 @@ $route['register']['GET']='Auth/RegisterController/index';
 $route['register']['POST']='Auth/RegisterController/register';
 $route['login']['GET']='Auth/LoginController/index';
 $route['login']['POST']='Auth/LoginController/login';
+
+$route['image_uploader'] = 'MainController/image_upload';
+$route['ajax_upload'] = 'MainController/ajax_upload';
+$route['multiple_image_upload'] = 'MultipleController/index';
+$route['multiple_ajax_upload'] = 'MultipleImageController/ajax_upload';
+
+
+// Shop page
+$routes->get('/', 'Shop::index');
+$routes->get('shop', 'Shop::index');
+
+// Cart page
+$routes->get('cart', 'Cart::index');
+
+// AJAX API routes
+$routes->post('cart/add', 'Cart::add');
+$routes->post('cart/update', 'Cart::update');
+$routes->post('cart/remove', 'Cart::remove');
