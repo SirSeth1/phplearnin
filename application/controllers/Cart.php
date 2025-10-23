@@ -1,16 +1,17 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-// namespace App\Controllers;
-
-class Cart extends BaseController
+class Cart extends CI_Controller
 {
-    protected $session;
+    public $session;
 
     public function __construct()
     {
-        // Start the session
-        $this->session = session();
+        parent::__construct();
+        $this->load->library('session');   // CI3 session
+        $this->load->helper('url');
+        $this->load->helper('security');
+        $this->load->helper('form');
     }
 
     /**
@@ -18,10 +19,18 @@ class Cart extends BaseController
      */
     public function index()
     {
-        $data['cart'] = $this->session->get('cart') ?? [];
-        $data['total'] = $this->calculateTotal($data['cart']);
+        $cart = $this->session->userdata('cart');
+        if (!is_array($cart)) {
+            $cart = [];
+        }
 
-        return view('cart_view', $data);
+        $data['cart']  = $cart;
+        $data['total'] = $this->calculateTotal($cart);
+        $data['cart_count'] = count($cart);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('cart_view', $data);
+        $this->load->view('layout/footer', $data);
     }
 
     /**
@@ -29,30 +38,25 @@ class Cart extends BaseController
      */
     public function add()
     {
-        // Must be an AJAX request
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Invalid request']);
+        if (!$this->input->is_ajax_request()) {
+            show_error('Invalid request', 400);
+            return;
         }
 
-        // Get POST data
-        $id = $this->request->getPost('id');
-        $name = $this->request->getPost('name');
-        $price = (float)$this->request->getPost('price');
-        $qty = (int)$this->request->getPost('qty');
-
+        $id    = $this->input->post('id');
+        $name  = $this->input->post('name');
+        $price = (float)$this->input->post('price');
+        $qty   = (int)$this->input->post('qty');
         if ($qty <= 0) $qty = 1;
 
-        // Get cart from session
-        $cart = $this->session->get('cart') ?? [];
+        $cart = $this->session->userdata('cart');
+        if (!is_array($cart)) $cart = [];
 
-        // Use product ID as the unique key in the cart array
         $row_id = $id;
 
-        // Check if item already exists
         if (isset($cart[$row_id])) {
-            $cart[$row_id]['qty'] += $qty; // Just add to quantity
+            $cart[$row_id]['qty'] += $qty;
         } else {
-            // Add new item
             $cart[$row_id] = [
                 'id'    => $id,
                 'name'  => $name,
@@ -61,15 +65,17 @@ class Cart extends BaseController
             ];
         }
 
-        // Save cart back to session
-        $this->session->set('cart', $cart);
+        $this->session->set_userdata('cart', $cart);
 
-        // Respond with success and new cart count
-        return $this->response->setJSON([
+        $resp = [
             'status'     => 'success',
             'message'    => 'Product added to cart!',
             'cart_count' => count($cart)
-        ]);
+        ];
+
+        $this->output
+             ->set_content_type('application/json')
+             ->set_output(json_encode($resp));
     }
 
     /**
@@ -77,29 +83,40 @@ class Cart extends BaseController
      */
     public function update()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400);
+        if (!$this->input->is_ajax_request()) {
+            show_error('Invalid request', 400);
+            return;
         }
 
-        $cart = $this->session->get('cart') ?? [];
-        $row_id = $this->request->getPost('row_id');
-        $qty = (int)$this->request->getPost('qty');
+        $cart = $this->session->userdata('cart');
+        if (!is_array($cart)) $cart = [];
+
+        $row_id = $this->input->post('row_id');
+        $qty    = (int)$this->input->post('qty');
 
         if ($qty > 0 && isset($cart[$row_id])) {
             $cart[$row_id]['qty'] = $qty;
-            $this->session->set('cart', $cart);
-            
-            // Recalculate total and subtotal for response
+            $this->session->set_userdata('cart', $cart);
+
             $total = $this->calculateTotal($cart);
             $subtotal = $cart[$row_id]['price'] * $cart[$row_id]['qty'];
 
-            return $this->response->setJSON([
+            $resp = [
                 'status'   => 'success',
                 'total'    => number_format($total, 2),
-                'subtotal' => number_format($subtotal, 2)
-            ]);
+                'subtotal' => number_format($subtotal, 2),
+                'cart_count' => count($cart)
+            ];
+
+            $this->output
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode($resp));
+            return;
         }
-        return $this->response->setJSON(['status' => 'error']);
+
+        $this->output
+             ->set_content_type('application/json')
+             ->set_output(json_encode(['status' => 'error']));
     }
 
     /**
@@ -107,26 +124,37 @@ class Cart extends BaseController
      */
     public function remove()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400);
+        if (!$this->input->is_ajax_request()) {
+            show_error('Invalid request', 400);
+            return;
         }
 
-        $cart = $this->session->get('cart') ?? [];
-        $row_id = $this->request->getPost('row_id');
+        $cart = $this->session->userdata('cart');
+        if (!is_array($cart)) $cart = [];
+
+        $row_id = $this->input->post('row_id');
 
         if (isset($cart[$row_id])) {
-            unset($cart[$row_id]); // Remove item from array
-            $this->session->set('cart', $cart);
-            
+            unset($cart[$row_id]);
+            $this->session->set_userdata('cart', $cart);
+
             $total = $this->calculateTotal($cart);
 
-            return $this->response->setJSON([
+            $resp = [
                 'status'     => 'success',
                 'total'      => number_format($total, 2),
                 'cart_count' => count($cart)
-            ]);
+            ];
+
+            $this->output
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode($resp));
+            return;
         }
-        return $this->response->setJSON(['status' => 'error']);
+
+        $this->output
+             ->set_content_type('application/json')
+             ->set_output(json_encode(['status' => 'error']));
     }
 
     /**
@@ -141,3 +169,4 @@ class Cart extends BaseController
         return $total;
     }
 }
+?>

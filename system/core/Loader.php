@@ -75,6 +75,7 @@ class CI_Loader {
 	public $MainModel;
 	public $dest_image;
 	public $image_lib;
+	public $ProductModel;
 
 	
 	// All these are set automatically. Don't mess with them.

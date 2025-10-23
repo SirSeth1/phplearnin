@@ -79,14 +79,16 @@ $route['multiple_image_upload'] = 'MultipleController/index';
 $route['multiple_ajax_upload'] = 'MultipleImageController/ajax_upload';
 
 
-// Shop page
-$routes->get('/', 'Shop::index');
-$routes->get('shop', 'Shop::index');
+// Default route (equivalent to /)
+$route['default_controller'] = 'Shop/index';
+
+// Shop page (explicitly)
+$route['shop']['GET'] = 'Shop/index';
 
 // Cart page
-$routes->get('cart', 'Cart::index');
+$route['cart']['GET'] = 'Cart/index';
 
 // AJAX API routes
-$routes->post('cart/add', 'Cart::add');
-$routes->post('cart/update', 'Cart::update');
-$routes->post('cart/remove', 'Cart::remove');
+$route['cart/add']['POST'] = 'Cart/add';
+$route['cart/update']['POST'] = 'Cart/update';
+$route['cart/remove']['POST'] = 'Cart/remove';
