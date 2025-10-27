@@ -38,39 +38,107 @@ class Cart extends CI_Controller
      */
     public function add()
     {
-        if (!$this->input->is_ajax_request()) {
-            show_error('Invalid request', 400);
+        // Only allow AJAX POST requests
+        if (!$this->input->is_ajax_request() || $this->input->method() !== 'post') {
+            $this->output
+                 ->set_status_header(400)
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode(['status' => 'error', 'message' => 'Invalid request']));
             return;
         }
 
-        $id    = $this->input->post('id');
-        $name  = $this->input->post('name');
-        $price = (float)$this->input->post('price');
-        $qty   = (int)$this->input->post('qty');
+        // Retrieve and sanitize inputs
+        $id_raw    = $this->input->post('id', true);
+        $name_raw  = $this->input->post('name', true);
+        $price_raw = $this->input->post('price', true);
+        $qty_raw   = $this->input->post('qty', true);
+
+        $id   = is_null($id_raw) ? null : trim((string)$id_raw);
+        $name = is_null($name_raw) ? ''   : trim(strip_tags($name_raw));
+        $price = is_null($price_raw) ? null : str_replace([',',' '], ['', ''], $price_raw);
+        $qty   = is_null($qty_raw) ? 1 : (int)$qty_raw;
         if ($qty <= 0) $qty = 1;
 
+        // Basic validation
+        if ($id === null || $id === '') {
+            $this->output
+                 ->set_status_header(400)
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode(['status' => 'error', 'message' => 'Missing product id']));
+            return;
+        }
+
+        // Accept numeric IDs or simple slugs (alphanum, dash, underscore)
+        if (!preg_match('/^[A-Za-z0-9_\-]+$/', $id) && !is_numeric($id)) {
+            $this->output
+                 ->set_status_header(400)
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode(['status' => 'error', 'message' => 'Invalid product id']));
+            return;
+        }
+
+        if ($name === '') {
+            $this->output
+                 ->set_status_header(400)
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode(['status' => 'error', 'message' => 'Missing product name']));
+            return;
+        }
+
+        if (!is_numeric($price)) {
+            $this->output
+                 ->set_status_header(400)
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode(['status' => 'error', 'message' => 'Invalid price']));
+            return;
+        }
+        $price = (float) $price;
+        if ($price < 0) {
+            $this->output
+                 ->set_status_header(400)
+                 ->set_content_type('application/json')
+                 ->set_output(json_encode(['status' => 'error', 'message' => 'Invalid price']));
+            return;
+        }
+
+        // Load current cart from session (array keyed by product id)
         $cart = $this->session->userdata('cart');
-        if (!is_array($cart)) $cart = [];
+        if (!is_array($cart)) {
+            $cart = [];
+        }
 
-        $row_id = $id;
-
-        if (isset($cart[$row_id])) {
-            $cart[$row_id]['qty'] += $qty;
+        // Update cart
+        if (isset($cart[$id])) {
+            // Prevent negative/overflow qty - keep it reasonable
+            $newQty = $cart[$id]['qty'] + $qty;
+            $cart[$id]['qty'] = max(1, min(10000, (int)$newQty));
+            // Keep stored price/name authoritative from request here; for stronger security,
+            // lookup product price from DB instead of trusting client.
+            $cart[$id]['price'] = $price;
+            $cart[$id]['name']  = $name;
         } else {
-            $cart[$row_id] = [
+            $cart[$id] = [
                 'id'    => $id,
                 'name'  => $name,
                 'price' => $price,
-                'qty'   => $qty
+                'qty'   => max(1, min(10000, (int)$qty))
             ];
         }
 
+        // Persist cart back to session
         $this->session->set_userdata('cart', $cart);
 
+        // Calculate cart_count = total quantity of items
+        $cart_count = 0;
+        foreach ($cart as $item) {
+            $cart_count += (int)$item['qty'];
+        }
+
+        // Successful JSON response
         $resp = [
             'status'     => 'success',
-            'message'    => 'Product added to cart!',
-            'cart_count' => count($cart)
+            'message'    => 'Item added to cart.',
+            'cart_count' => $cart_count
         ];
 
         $this->output

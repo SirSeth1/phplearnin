@@ -2,7 +2,12 @@
     <h1 class="shop-title">Welcome to your one stop best tech solutions shop</h1>
     <p class="shop-description">Browse our selection of products.</p>
 </div>
-<div class="product-container">
+
+<?php
+foreach ($product as $row){
+    // each $product is an object with properties: id, name, price, description, image
+    echo '
+    <div class="product-container">
 
     <div class="product-card" data-id="lapi5">
         <img src="Product_images/lapi5.webp" alt="Laptop" class="product-image product-image--laptop">
@@ -71,7 +76,10 @@
         <p class="product-description hidden">iPad Pro 11" or 13"</p>
     </div>
 
-</div>
+    </div>
+';
+}
+?>
 
 <!-- <script>
     function toggleDescription(element) {
@@ -87,6 +95,8 @@
 <style>
 /* product grid (keeps your 3-column layout and makes it responsive) */
 .shop-header{
+    background-image: url('Product_images/back.jpg');
+    background-size: cover;
     padding: 20px 0;
     margin-bottom: 30px;
     height: 400px;
@@ -95,9 +105,15 @@
 .shop-title{
     text-align: center;
     margin-top: 100px;
-    font-size: 3em;
-    font-family: "Brush Script MT", cursive;
-    color: #333;
+    font-size: 3.5em;
+    font-weight: bold;
+    font-family: "Playfair Display", serif;
+    color: #492d28ff;
+    -webkit-text-stroke: 1px white; /* Outline width (1px) and color (black) */
+    text-stroke: 1px white; /* Standard property for future support */
+
+    /* Optional: Improves stroke anti-aliasing */
+    -webkit-font-smoothing: antialiased;
 }
 
 .shop-description{
@@ -105,7 +121,7 @@
     margin-bottom: 30px;
     font-size: 1.5em;
     font-family: "Brush Script MT", cursive;
-    color: #666;
+    color: #0f1612ff;
 }
 
 .product-container {
@@ -196,16 +212,16 @@ jQuery(function($){
 
         // POST to your existing cart/add endpoint (expects id,name,price,qty)
         $.ajax({
-            url: '<?php echo base_url("cart/add"); ?>',
+            url: '<?php echo base_url("Cart/add"); ?>',
             method: 'POST',
             data: { id: id, name: name, price: price, qty: 1 },
             dataType: 'json'
         }).done(function(response){
             // on success redirect to cart page
-            window.location.href = '<?php echo base_url("cart"); ?>';
+            window.location.href = '<?php echo base_url("cart_view"); ?>';
         }).fail(function(){
             // fallback: still go to cart page
-            window.location.href = '<?php echo base_url("cart"); ?>';
+            window.location.href = '<?php echo base_url("cart_view"); ?>';
         });
     });
 });

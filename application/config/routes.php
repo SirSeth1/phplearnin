@@ -92,3 +92,20 @@ $route['cart']['GET'] = 'Cart/index';
 $route['cart/add']['POST'] = 'Cart/add';
 $route['cart/update']['POST'] = 'Cart/update';
 $route['cart/remove']['POST'] = 'Cart/remove';
+
+$route['products/ajax_list']['GET'] = 'myprojectcontrollers/ProductController/ajax_list';
+$route['cart/add']['POST'] = 'myprojectcontrollers/CartController/add';
+$route['cart/view']['GET'] = 'myprojectcontrollers/CartController/view';
+$route['cart/update']['POST'] = 'myprojectcontrollers/CartController/update';
+$route['cart/remove']['POST'] = 'myprojectcontrollers/CartController/remove';   
+$route['cart/clear']['POST'] = 'myprojectcontrollers/CartController/clear';
+$route['cart/count']['GET'] = 'myprojectcontrollers/CartController/count';
+
+// Shop page (where users see products)
+$route['shop2'] = 'myprojectcontrollers/ShopController/index';
+
+// Admin page (where admin adds new products)
+$route['admin/add-product'] = 'myprojectcontrollers/AdminController/add_product';
+
+$route['shop3'] = 'myprojectcontrollers/ShopController/index';
+$route['shop/fetch-products'] = 'ShopController/fetch_products';
