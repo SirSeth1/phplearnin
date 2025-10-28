@@ -76,6 +76,8 @@ class CI_Loader {
 	public $dest_image;
 	public $image_lib;
 	public $ProductModel;
+	public $CartModel;
+	public $UserCartModel;
 
 	
 	// All these are set automatically. Don't mess with them.

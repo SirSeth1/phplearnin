@@ -1,50 +1,72 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+
 class CartController extends CI_Controller {
+    public $UserCartModel;
 
     public function __construct() {
         parent::__construct();
-        $this->load->model('CartModel');
-        $this->load->library('cart');
+        $this->load->model('myproject/UserCartModel');
         $this->load->helper('url');
+        $this->load->library('session');
     }
 
-    // Add item via AJAX
-    public function add() {
-        $product_id = $this->input->post('id');
-        $qty = $this->input->post('qty') ?? 1;
+    // Show user's current cart items
+    public function index() {
+        $session_id = session_id();
+        $data['cart_items'] = $this->UserCartModel->getCartItems($session_id);
+        $this->load->view('myprojectviews/shop/user_cart_view', $data);
+    }
+// Return current cart count
+public function getCartCount() {
+    $session_id = session_id();
+    $count = $this->UserCartModel->getCartCount($session_id);
+    echo json_encode(['count' => $count]);
+}
 
-        if ($this->Cart_model->add_to_cart($product_id, $qty)) {
-            $response = [
-                'status' => 'success',
-                'message' => 'Product added to cart',
-                'cart_total_items' => count($this->cart->contents())
-            ];
-        } else {
-            $response = ['status' => 'error', 'message' => 'Failed to add product'];
+    // Add item to cart
+    public function add() {
+        $product_id = $this->input->post('product_id');
+        $session_id = session_id();
+
+        if (!$product_id) {
+            echo json_encode(['success' => false, 'message' => 'No product ID provided']);
+            return;
         }
 
-        echo json_encode($response);
+        $data = [
+            'session_id' => $session_id,
+            'product_id' => $product_id,
+            'quantity' => 1
+        ];
+
+        $this->UserCartModel->addToCart($data);
+        echo json_encode(['success' => true, 'message' => 'Product added to cart']);
     }
 
-    // View cart items
-    public function view() {
-        $data['cart_items'] = $this->CartModel->get_cart_items();
-        $data['cart_total'] = $this->CartModel->get_total();
-        $this->load->view('cart_view', $data);
+    // Remove one item from cart
+   // Remove item from cart (by product_id via POST)
+public function remove() {
+    $product_id = $this->input->post('product_id');
+    $session_id = session_id();
+
+    if (!$product_id) {
+        echo json_encode(['success' => false, 'message' => 'No product ID provided']);
+        return;
     }
 
-    // Remove single item
-    public function remove() {
-        $rowid = $this->input->post('rowid');
-        $this->Cart_model->remove_item($rowid);
-        echo json_encode(['status' => 'success']);
-    }
+    $this->UserCartModel->removeFromCartByProduct($product_id, $session_id);
+    echo json_encode([
+        'success' => true,
+        'message' => 'Product removed from cart',
+        'cart_count' => $this->UserCartModel->countCartItems($session_id)
+    ]);
+}
 
     // Clear entire cart
     public function clear() {
-        $this->Cart_model->clear_cart();
-        echo json_encode(['status' => 'success']);
+        $this->UserCartModel->clearCart(session_id());
+        redirect('myprojectcontrollers/CartController');
     }
 }

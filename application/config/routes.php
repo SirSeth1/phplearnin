@@ -102,10 +102,26 @@ $route['cart/clear']['POST'] = 'myprojectcontrollers/CartController/clear';
 $route['cart/count']['GET'] = 'myprojectcontrollers/CartController/count';
 
 // Shop page (where users see products)
-$route['shop2'] = 'myprojectcontrollers/ShopController/index';
+
+$route['shop2']['GET'] = 'myprojectcontrollers/ShopController/index';
 
 // Admin page (where admin adds new products)
 $route['admin/add-product'] = 'myprojectcontrollers/AdminController/add_product';
 
-$route['shop3'] = 'myprojectcontrollers/ShopController/index';
 $route['shop/fetch-products'] = 'ShopController/fetch_products';
+
+$route['shop/add-to-cart'] = 'ShopController/add_to_cart';
+$route['myauth/login']['GET'] = 'myprojectcontrollers/Auth/LoginController/login';
+$route['myauth/logout']['GET'] = 'myprojectcontrollers/Auth/LogoutController/logout';
+
+
+
+
+// $route['register']['GET']='Auth/RegisterController/index';
+// $route['register']['POST']='Auth/RegisterController/register';
+
+// $route['login']['GET']='Auth/LoginController/index';
+// $route['login']['POST']='Auth/LoginController/login';
+
+// $route['userpage']['GET']='UserController/index';
+// $route['adminpage']['GET']='AdminController/index';

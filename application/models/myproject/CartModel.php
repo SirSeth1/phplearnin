@@ -3,45 +3,59 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class CartModel extends CI_Model {
 
+    private $table = 'user_cart';
+
     public function __construct() {
         parent::__construct();
-        $this->load->library('cart');
-        $this->load->model('ProductModel');
+        $this->load->database();
     }
 
-    // Add item to cart
-    public function add_to_cart($product_id, $qty = 1) {
-        $product = $this->Product_model->get_product($product_id);
-        if(!$product) return false;
+    // Add product to cart
+    public function add_to_cart($user_id, $product_id, $quantity = 1) {
+        $existing = $this->db->get_where($this->table, [
+            'user_id' => $user_id,
+            'product_id' => $product_id,
+            'status' => 'cart'
+        ])->row();
 
-        $data = array(
-            'id'      => $product->id,
-            'qty'     => $qty,
-            'price'   => $product->price,
-            'name'    => $product->title,
-            'image'   => $product->image
-        );
-
-        return $this->cart->insert($data);
+        if ($existing) {
+            // If already in cart, just increase quantity
+            $this->db->set('quantity', 'quantity + '.$quantity, FALSE);
+            $this->db->where('id', $existing->id);
+            return $this->db->update($this->table);
+        } else {
+            return $this->db->insert($this->table, [
+                'user_id' => $user_id,
+                'product_id' => $product_id,
+                'quantity' => $quantity
+            ]);
+        }
     }
 
-    // Get all items
-    public function get_cart_items() {
-        return $this->cart->contents();
+    // Get all items in a user’s current cart
+    public function get_user_cart($user_id) {
+        $this->db->select('user_cart.*, our_products.name, our_products.price, our_products.image');
+        $this->db->from($this->table);
+        $this->db->join('our_products', 'our_products.id = user_cart.product_id');
+        $this->db->where('user_cart.user_id', $user_id);
+        $this->db->where('user_cart.status', 'cart');
+        return $this->db->get()->result();
     }
 
-    // Remove item
-    public function remove_item($rowid) {
-        return $this->cart->remove($rowid);
+    // Get past purchases
+    public function get_purchase_history($user_id) {
+        $this->db->select('user_cart.*, our_products.name, our_products.price, our_products.image');
+        $this->db->from($this->table);
+        $this->db->join('our_products', 'our_products.id = user_cart.product_id');
+        $this->db->where('user_cart.user_id', $user_id);
+        $this->db->where('user_cart.status', 'purchased');
+        return $this->db->get()->result();
     }
 
-    // Clear cart
-    public function clear_cart() {
-        return $this->cart->destroy();
-    }
-
-    // Get total
-    public function get_total() {
-        return $this->cart->total();
+    // Mark all items as purchased (checkout)
+    public function checkout($user_id) {
+        $this->db->where('user_id', $user_id);
+        $this->db->where('status', 'cart');
+        return $this->db->update($this->table, ['status' => 'purchased']);
     }
 }
