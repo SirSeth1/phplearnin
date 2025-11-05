@@ -32,18 +32,18 @@ class PaymentController extends CI_Controller {
     }
 
     /** Initiate STK Push */
-    public function initiatePayment() {
-        $phone = $this->input->post('phone');
+    public function initiatePayment($phone = null, $amount = 0) {
+        //$phone = $this->input->post('phone');
 
         // ✅ Get your cart data from session
         $cart = $this->session->userdata('user_cart');
-        $amount = 0;
+        //$amount = 0;
 
-        if (!empty($cart)) {
-            foreach ($cart as $item) {
-                $amount += $item['price'] * $item['quantity'];
-            }
-        }
+        // if (!empty($cart)) {
+        //     foreach ($cart as $item) {
+        //         $amount += $item['price'] * $item['quantity'];
+        //     }
+        // }
 
         // Validate inputs
         if (!$phone || $amount <= 0) {
