@@ -4,6 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class CartController extends CI_Controller {
     public $UserCartModel;
+    public $cart;
 
     public function __construct() {
         parent::__construct();

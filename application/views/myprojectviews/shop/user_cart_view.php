@@ -136,6 +136,31 @@ h2 {
     border: 1px dashed #ddd;
     border-radius: 5px;
 }
+
+/* MPESA form styles */
+.mpesa-section { max-width:900px; margin:20px auto; padding:18px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.04); }
+.mpesa-section h3 { margin:0 0 12px; font-size:1.25rem; color:#333; text-align:left; }
+.mpesa-form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.mpesa-row { flex:1 1 220px; display:flex; flex-direction:column; }
+.mpesa-row label { font-size:0.9rem; color:#444; margin-bottom:6px; }
+.mpesa-row input { padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:1rem; outline:none; transition:box-shadow .12s, border-color .12s; }
+.mpesa-row input:focus { border-color:#4CAF50; box-shadow:0 0 0 3px rgba(76,175,80,0.08); }
+
+.mpesa-actions { display:flex; gap:10px; align-items:center; margin-left:auto; }
+.mpesa-btn { padding:10px 16px; border-radius:6px; font-weight:600; cursor:pointer; border:0; }
+.mpesa-btn-primary { background:#28a745; color:#fff; }
+.mpesa-btn-primary:hover { background:#218838; }
+.mpesa-btn-secondary { background:#f1f1f1; color:#333; }
+.mpesa-btn-secondary:hover { background:#e2e2e2; }
+
+.mpesa-feedback { margin-top:12px; padding:10px 12px; border-radius:6px; font-size:0.95rem; }
+.mpesa-feedback.success { background:#e6ffed; color:#155724; border:1px solid #c3e6cb; display:block; }
+.mpesa-feedback.error   { background:#fff0f0; color:#721c24; border:1px solid #f5c6cb; display:block; }
+
+@media (max-width:600px) {
+    .mpesa-form { flex-direction:column; }
+    .mpesa-actions { margin-left:0; justify-content:flex-end; width:100%; }
+}
   </style>
 </head>
 <body>
@@ -182,14 +207,89 @@ h2 {
         </table>
 
         <div class="cart-actions">
-            <a href="<?php echo site_url('checkout'); ?>" class="checkout-btn">Proceed to Checkout</a>
-            
             <a href="<?php echo site_url('myprojectcontrollers/UserCartController/clear'); ?>" class="clear-cart-link">Clear Cart</a>
         </div>
         
     <?php endif; ?>
+
+    <?php
+    // Ensure a numeric total is available for the payment form
+    $total_amount = isset($grand_total) ? $grand_total : 0;
+    // raw numeric for form submission
+    $total_amount_clean = number_format((float)$total_amount, 2, '.', '');
+    ?>
     
 </div>
+
+<hr>
+
+<!-- MPESA PAYMENT -->
+<section class="mpesa-section">
+    <h3>Complete Payment</h3>
+
+    <form id="mpesaForm" method="POST" action="<?php echo site_url('myprojectcontrollers/PaymentController/initiatePayment'); ?>" class="mpesa-form">
+        <div class="mpesa-row">
+            <label for="mpesaPhone">Phone</label>
+            <input id="mpesaPhone" name="phone" type="tel" pattern="^254[0-9]{9}$" placeholder="2547xxxxxxxxx"  required>
+        </div>
+
+        <div class="mpesa-row">
+            <label for="mpesaAmount">Amount (Ksh)</label>
+            <input id="mpesaAmount" name="amount" type="number" step="0.01" min="0" value="<?php echo $total_amount_clean; ?>" required>
+        </div>
+
+        <div class="mpesa-actions">
+            <button type="submit" class="mpesa-btn mpesa-btn-primary">Pay Now</button>
+            <button type="button" id="mpesaCancel" class="mpesa-btn mpesa-btn-secondary">Cancel</button>
+        </div>
+
+        <div id="mpesaFeedback" class="mpesa-feedback" aria-live="polite" style="display:none;"></div>
+    </form>
+</section>
+
+<script>
+jQuery(function($){
+    $('#mpesaForm').on('submit', function(e){
+        e.preventDefault();
+        var $fb = $('#mpesaFeedback').removeClass('success error').hide();
+        var phone = $('#mpesaPhone').val().trim();
+        var amount = parseFloat($('#mpesaAmount').val());
+
+        if (!phone || isNaN(amount) || amount <= 0) {
+            $fb.addClass('error').text('Please enter a valid phone number and amount.').show();
+            return;
+        }
+
+        // disable button to prevent duplicate submits
+        var $btn = $(this).find('.mpesa-btn-primary').prop('disabled', true).text('Processing...');
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            dataType: 'json',
+            data: { phone: phone, amount: amount },
+            success: function(res){
+                if (res && (res.ResponseCode === "0" || res.status === 'success')) {
+                    $fb.addClass('success').text(res.message || 'Check your phone to complete payment.').show();
+                } else {
+                    $fb.addClass('error').text(res.errorMessage || res.message || 'Payment initiation failed.').show();
+                }
+            },
+            error: function(xhr){
+                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : (xhr.responseText || 'Server error');
+                $fb.addClass('error').text(msg).show();
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text('Pay Now');
+            }
+        });
+    });
+
+    $('#mpesaCancel').on('click', function(){
+        $('#mpesaFeedback').hide().removeClass('success error');
+    });
+});
+</script>
+
 
 </body>
 </html>

@@ -78,6 +78,7 @@ class CI_Loader {
 	public $ProductModel;
 	public $CartModel;
 	public $UserCartModel;
+	public $cart;
 
 	
 	// All these are set automatically. Don't mess with them.
