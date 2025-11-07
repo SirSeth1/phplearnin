@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class AdminController extends CI_Controller {
+    public $cart;
 
     public function __construct() {
         parent::__construct();

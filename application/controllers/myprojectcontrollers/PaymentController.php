@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class PaymentController extends CI_Controller {
@@ -115,4 +115,4 @@ class PaymentController extends CI_Controller {
         echo json_encode(['ResultCode' => 0, 'ResultDesc' => 'Callback received successfully']);
     }
 }
-?>
+?> -->

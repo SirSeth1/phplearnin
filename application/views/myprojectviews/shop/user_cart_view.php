@@ -335,20 +335,24 @@
             Secure Payment Gateway
         </h3>
         
-        <form class="mpesa-form" action="./stk_initiate.php" method="POST">
-            
+        <form class="mpesa-form" action="<?php echo site_url('myprojectcontrollers/CartController/initiateMpesaPayment'); ?>" method="POST">
+
             <!-- Amount Input (Automatically receives value from Grand Total) -->
             <div class="mpesa-row">
                 <label for="mpesa-amount">Amount Payable (Ksh)</label>
                 <input 
-                    type="number" 
                     id="mpesa-amount"
+                    type="hidden"
                     name="amount" 
-                    value="<?php echo $total_amount_clean; ?>" 
-                    readonly 
-                    required
-                    title="The amount is automatically set to your cart total."
-                >
+                    value="<?php echo (int)$total_amount; ?>"> 
+
+<!-- And show a separate read-only display field -->
+<input 
+    type="text" 
+    value="Ksh <?php echo number_format($total_amount); ?>" 
+    readonly 
+    style="background:#f0f0f0;font-weight:bold;border:none;color:#000;">
+
             </div>
             
             <!-- Phone Number Input -->

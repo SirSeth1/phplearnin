@@ -113,6 +113,7 @@ $route['shop/fetch-products'] = 'ShopController/fetch_products';
 $route['shop/add-to-cart'] = 'ShopController/add_to_cart';
 $route['myauth/login']['GET'] = 'myprojectcontrollers/Auth/LoginController/login';
 $route['myauth/logout']['GET'] = 'myprojectcontrollers/Auth/LogoutController/logout';
+$route['cart/payment_processing/(:any)'] = 'myprojectcontrollers/CartController/payment_processing/$1';
 
 
 
